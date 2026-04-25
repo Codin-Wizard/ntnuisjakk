@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NTNUI Sjakk</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── CAROUSEL ── */
+    .carousel-wrap {
+      position: relative;
+      width: 100%;
+      height: 520px;
+      background: #111;
+      overflow: hidden;
+    }
+    .carousel-track {
+      display: flex;
+      height: 100%;
+      will-change: transform;
+      transition: transform 0.6s cubic-bezier(0.77,0,0.175,1);
+    }
+    .carousel-slide {
+      flex: 0 0 calc(100% / 3);
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    .carousel-slide img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+    }
+    .carousel-slide::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(100,20,20,0.5) 100%);
+      pointer-events: none;
+    }
+    .carousel-slide + .carousel-slide { border-left: 2px solid rgba(0,0,0,0.2); }
+
+    /* Hero text overlay on carousel */
+    .carousel-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      z-index: 10;
+      padding: 32px 48px;
+      background: linear-gradient(to top, rgba(20,8,8,0.82) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    .carousel-overlay h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(28px, 4.5vw, 52px);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.1;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.6);
+    }
+    .carousel-overlay p {
+      color: rgba(255,255,255,0.8);
+      font-size: 16px;
+      margin-top: 8px;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+      max-width: 560px;
+    }
+
+    .car-btn {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      z-index: 20; background: rgba(0,0,0,0.3); border: none;
+      color: rgba(255,255,255,0.85); cursor: pointer; font-size: 48px;
+      line-height: 1; padding: 6px 18px 10px; border-radius: 4px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+      transition: background 0.2s, transform 0.2s; backdrop-filter: blur(4px);
+    }
+    .car-btn:hover { background: rgba(155,52,52,0.7); transform: translateY(-50%) scale(1.07); }
+    .car-btn-prev { left: 10px; }
+    .car-btn-next { right: 10px; }
+
+    .car-dots {
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      z-index: 20; display: flex; gap: 8px;
+    }
+    .car-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(255,255,255,0.4); border: none; padding: 0;
+      cursor: pointer; transition: background 0.25s, transform 0.2s;
+    }
+    .car-dot.active { background: #fff; transform: scale(1.5); }
+
+    /* ── ICON NAVBAR ── */
+    .icon-nav {
+      display: flex; align-items: stretch;
+      background: var(--red);
+      box-shadow: 0 4px 20px rgba(100,20,20,0.4);
+    }
+    .icon-nav-item {
+      position: relative; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 5px;
+      padding: 15px 8px; flex: 1; text-decoration: none;
+      color: rgba(255,255,255,0.9); font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      border-right: 1px solid rgba(255,255,255,0.13); overflow: hidden;
+      transition: color 0.2s;
+    }
+    .icon-nav-item:last-child { border-right: none; }
+    .icon-nav-item::before { content:''; position:absolute; inset:0; background:rgba(0,0,0,0); transition:background 0.2s; }
+    .icon-nav-item:hover::before { background:rgba(0,0,0,0.22); }
+    .icon-nav-item:hover { color:#fff; }
+    .icon-nav-icon { font-size:22px; line-height:1; position:relative; z-index:1; transition:transform 0.2s; }
+    .icon-nav-item:hover .icon-nav-icon { transform: scale(1.18); }
+    .icon-nav-label { position:relative; z-index:1; }
+
+    /* ── SOCIAL BUTTONS ── */
+    .social-row {
+      display: flex; gap: 12px; flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    /* ── WELCOME SECTION ── */
+    .welcome-section {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 32px 36px;
+      box-shadow: var(--shadow);
+      margin-bottom: 8px;
+    }
+    .welcome-section h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px; font-weight: 900; color: var(--dark); margin-bottom: 12px;
+    }
+    .welcome-section p { color: var(--mid); line-height: 1.75; margin-bottom: 10px; }
+    .welcome-section a { color: var(--red); font-weight: 600; }
+
+    @media (max-width: 700px) {
+      .carousel-wrap { height: 240px; }
+      .carousel-slide { flex: 0 0 100%; }
+      .carousel-overlay { padding: 20px 20px; }
+      .icon-nav-label { display: none; }
+      .icon-nav-item { padding: 13px 4px; }
+    }
+    @media (min-width: 701px) and (max-width: 1000px) {
+      .carousel-wrap { height: 360px; }
+      .carousel-slide { flex: 0 0 50%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="top-nav" id="top-nav"></nav>
+
+<!-- CAROUSEL -->
+<div class="carousel-wrap" id="carousel">
+  <div class="carousel-track" id="car-track">
+    <!-- 3 end clones -->
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01504.jpg" alt=""></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01482.jpg" alt=""></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01495.jpg" alt=""></div>
+    <!-- 14 real slides -->
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01383.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01518.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01483.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01486.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/741e9c98548fabcec2a8d0cbac370ac1.jpeg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01415-kopi.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01500.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01384-kopi.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01364-kopi.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01354-kopi.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01504.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01482.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01495.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01488.jpg" alt="NTNUI Sjakk"></div>
+    <!-- 3 start clones -->
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01383.jpg" alt=""></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01518.jpg" alt=""></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01483.jpg" alt=""></div>
+  </div>
+
+  <!-- Hero overlay -->
+  <div class="carousel-overlay">
+    <h1 data-i18n="hero_welcome">Velkommen til NTNUI Sjakk!</h1>
+    <p data-i18n="hero_sub">Et åpent møtepunkt for alle sjakkinteresserte studenter i Trondheim.</p>
+  </div>
+
+  <button class="car-btn car-btn-prev" id="car-prev" aria-label="Forrige">&#8249;</button>
+  <button class="car-btn car-btn-next" id="car-next" aria-label="Neste">&#8250;</button>
+  <div class="car-dots" id="car-dots"></div>
+</div>
+
+<!-- ICON NAVBAR -->
+<nav class="icon-nav">
+  <a href="#onsdagssjakk" class="icon-nav-item">
+    <span class="icon-nav-icon">♟</span>
+    <span class="icon-nav-label" data-i18n="nav_home">Onsdagssjakk</span>
+  </a>
+  <a href="#fide" class="icon-nav-item">
+    <span class="icon-nav-icon">🏆</span>
+    <span class="icon-nav-label">FIDE</span>
+  </a>
+  <a href="#samarbeid" class="icon-nav-item">
+    <span class="icon-nav-icon">🤝</span>
+    <span class="icon-nav-label" data-i18n="section_collab">Samarbeid</span>
+  </a>
+  <a href="#kontakt" class="icon-nav-item">
+    <span class="icon-nav-icon">✉</span>
+    <span class="icon-nav-label" data-i18n="section_contact">Kontakt</span>
+  </a>
+  <a href="faq.html" class="icon-nav-item">
+    <span class="icon-nav-icon">❓</span>
+    <span class="icon-nav-label" data-i18n="nav_faq">FAQ</span>
+  </a>
+  <a href="styre.html" class="icon-nav-item">
+    <span class="icon-nav-icon">♛</span>
+    <span class="icon-nav-label" data-i18n="nav_board">Styret</span>
+  </a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="site-main">
+
+  <!-- Welcome -->
+  <div class="welcome-section">
+    <h2 data-i18n="hero_welcome">Velkommen til NTNUI Sjakk!</h2>
+    <p data-i18n="intro_text"></p>
+    <p>
+      <span data-i18n="intro_fb">Alle aktiviteter og oppdateringer publiseres jevnlig på vår</span>
+      <a href="https://fb.me/ntnuisjakk" target="_blank" rel="noopener noreferrer" data-i18n="intro_fb2">Facebook-side</a>.
+      <span data-i18n="intro_ig">Vi deler også bilder og videoer fra sjakkkveldene på</span>
+      <a href="https://instagram.com/ntnuisjakk" target="_blank" rel="noopener noreferrer" data-i18n="intro_ig2">Instagram</a>.
+    </p>
+    <div class="social-row">
+      <a href="https://www.facebook.com/ntnuisjakk" target="_blank" rel="noopener noreferrer" class="btn btn-fb">📘 Facebook</a>
+      <a href="https://www.instagram.com/ntnuisjakk/" target="_blank" rel="noopener noreferrer" class="btn btn-ig">📸 Instagram</a>
+    </div>
+  </div>
+
+  <!-- Activities -->
+  <h2 class="section-heading" data-i18n="section_activities">Aktiviteter</h2>
+
+  <div class="card-grid">
+    <div class="card" id="onsdagssjakk">
+      <div class="card-header red">♟ <span data-i18n="wed_title">Onsdagssjakk</span></div>
+      <div class="card-body" data-i18n="wed_body"></div>
+    </div>
+    <div class="card" id="fide">
+      <div class="card-header blue">🏆 <span data-i18n="fide_title">FIDE-rangert sjakk</span></div>
+      <div class="card-body" data-i18n="fide_body"></div>
+    </div>
+  </div>
+
+  <!-- Collaboration -->
+  <h2 class="section-heading" id="samarbeid" data-i18n="section_collab">Samarbeid</h2>
+
+  <details class="accordion">
+    <summary>♟ <span data-i18n="rental_title">Utlån av sjakkutstyr</span></summary>
+    <div class="accordion-body" data-i18n="rental_body"></div>
+  </details>
+
+  <div class="card">
+    <div class="card-header red">🤝 <span data-i18n="partner_title">Bli samarbeidspartner</span></div>
+    <div class="card-body" style="text-align:center" data-i18n="partner_body"></div>
+  </div>
+
+  <!-- Contact -->
+  <h2 class="section-heading" id="kontakt" data-i18n="section_contact">Kontakt</h2>
+  <div class="card">
+    <div class="card-header teal">✉ <span data-i18n="section_contact">Kontakt</span></div>
+    <div class="card-body" style="text-align:center;font-size:16px" data-i18n="contact_body"></div>
+  </div>
+
+  <div style="text-align:center;margin-top:36px;margin-bottom:8px">
+    <a href="https://www.chess.com/daily" target="_blank" rel="noopener noreferrer" class="btn btn-blue" data-i18n="puzzle_btn">♟ Dagens sjakkpuzzle</a>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <p data-i18n="footer">© 2025 NTNUI Sjakk · Norges Teknisk-Naturvitenskapelige Universitets Idrettslag</p>
+</footer>
+
+<script src="i18n.js"></script>
+<script>
+/* ── Init nav ── */
+buildNav('home');
+
+/* ── Carousel ── */
+window.addEventListener('load', function () {
+(function () {
+  var TOTAL = 14, CLONE = 3, current = 0, animating = false, autoTimer;
+  var carousel = document.getElementById('carousel');
+  var track    = document.getElementById('car-track');
+  var dotsWrap = document.getElementById('car-dots');
+
+  for (var i = 0; i < TOTAL; i++) {
+    var d = document.createElement('button');
+    d.className = 'car-dot' + (i === 0 ? ' active' : '');
+    d.setAttribute('aria-label', 'Bilde ' + (i+1));
+    dotsWrap.appendChild(d);
+  }
+  var dots = dotsWrap.querySelectorAll('.car-dot');
+  var slides;
+
+  function perView() {
+    var w = carousel.offsetWidth;
+    if (w < 701)  return 1;
+    if (w < 1001) return 2;
+    return 3;
+  }
+  function setSizes() {
+    slides = track.querySelectorAll('.carousel-slide');
+    var pv = perView(), w = carousel.offsetWidth / pv;
+    slides.forEach(function(s){ s.style.width = w + 'px'; });
+    goTo(current, false);
+  }
+  function goTo(idx, animate) {
+    if (animate === undefined) animate = true;
+    track.style.transition = animate ? 'transform 0.6s cubic-bezier(0.77,0,0.175,1)' : 'none';
+    var pv = perView(), slideW = carousel.offsetWidth / pv;
+    track.style.transform = 'translateX(-' + (idx + CLONE) * slideW + 'px)';
+    var ri = ((idx % TOTAL) + TOTAL) % TOTAL;
+    dots.forEach(function(d,i){ d.classList.toggle('active', i === ri); });
+    current = idx;
+  }
+  function next() { if (!animating) { animating = true; goTo(current + 1); } }
+  function prev() { if (!animating) { animating = true; goTo(current - 1); } }
+  track.addEventListener('transitionend', function() {
+    if (current >= TOTAL) goTo(0, false);
+    if (current < 0)      goTo(TOTAL - 1, false);
+    animating = false;
+  });
+  document.getElementById('car-next').addEventListener('click', function(){ next(); resetAuto(); });
+  document.getElementById('car-prev').addEventListener('click', function(){ prev(); resetAuto(); });
+  dots.forEach(function(d,i){ d.addEventListener('click', function(){ animating=true; goTo(i); resetAuto(); }); });
+  function startAuto() { autoTimer = setInterval(next, 3500); }
+  function resetAuto()  { clearInterval(autoTimer); startAuto(); }
+  carousel.addEventListener('mouseenter', function(){ clearInterval(autoTimer); });
+  carousel.addEventListener('mouseleave', startAuto);
+  setSizes();
+  window.addEventListener('resize', setSizes);
+  startAuto();
+})();
+});
+</script>
+</body>
+</html>

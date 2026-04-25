@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ — NTNUI Sjakk</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .faq-list { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+
+    .faq-item {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+    .faq-item summary {
+      padding: 20px 24px;
+      font-family: 'Playfair Display', serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--dark);
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      user-select: none;
+      transition: background 0.2s;
+    }
+    .faq-item summary:hover { background: var(--cream-dk); }
+    .faq-item summary::after {
+      content: '▾';
+      font-size: 20px;
+      color: var(--red);
+      flex-shrink: 0;
+      transition: transform 0.25s;
+    }
+    .faq-item[open] summary::after { transform: rotate(180deg); }
+    .faq-item[open] summary { background: var(--cream-dk); }
+
+    .faq-answer {
+      padding: 0 24px 22px;
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--mid);
+      border-top: 2px solid var(--red);
+      padding-top: 18px;
+      margin-top: 0;
+    }
+    .faq-answer a { color: var(--red); font-weight: 600; }
+
+    .faq-q-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px; height: 28px;
+      background: var(--red);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+      font-family: 'Source Sans 3', sans-serif;
+    }
+
+    .faq-cta {
+      margin-top: 40px;
+      background: var(--dark);
+      border-radius: var(--radius);
+      padding: 36px 32px;
+      text-align: center;
+      color: var(--cream);
+    }
+    .faq-cta h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+    .faq-cta p { color: rgba(245,240,232,0.7); margin-bottom: 20px; }
+    .faq-cta a { color: var(--red-light); font-weight: 700; }
+    .faq-cta a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<nav class="top-nav" id="top-nav"></nav>
+
+<div class="page-hero">
+  <h1 data-i18n="faq_hero_title">Ofte stilte spørsmål</h1>
+  <p data-i18n="faq_hero_sub">Alt du lurer på om NTNUI Sjakk</p>
+</div>
+
+<main class="site-main">
+  <div class="faq-list" id="faq-list">
+    <!-- Rendered by JS for i18n support -->
+  </div>
+
+  <div class="faq-cta">
+    <h3>♟ NTNUI Sjakk</h3>
+    <p data-i18n="intro_text"></p>
+    <a href="index.html" class="btn btn-red" style="display:inline-flex;margin-top:4px" data-i18n="nav_home">Hjem</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <p data-i18n="footer"></p>
+</footer>
+
+<script src="i18n.js"></script>
+<script>
+buildNav('faq');
+
+function renderFAQ() {
+  const lang = getLang();
+  const tr = TRANSLATIONS[lang];
+  const list = document.getElementById('faq-list');
+  const questions = [
+    { q: tr.faq_q1, a: tr.faq_a1 },
+    { q: tr.faq_q2, a: tr.faq_a2 },
+    { q: tr.faq_q3, a: tr.faq_a3 },
+    { q: tr.faq_q4, a: tr.faq_a4 },
+  ];
+  list.innerHTML = questions.map((item, i) => `
+    <details class="faq-item">
+      <summary>
+        <span style="display:flex;align-items:center;gap:12px">
+          <span class="faq-q-num">${i + 1}</span>
+          ${item.q}
+        </span>
+      </summary>
+      <div class="faq-answer">${item.a}</div>
+    </details>
+  `).join('');
+}
+
+renderFAQ();
+
+/* Re-render FAQ when language changes */
+const origBuildNav = buildNav;
+const origApply = applyTranslations;
+// Patch: re-render FAQ after language switch
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('lang-btn')) {
+    setTimeout(renderFAQ, 10);
+  }
+});
+</script>
+</body>
+</html>

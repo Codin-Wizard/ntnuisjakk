@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Styret — NTNUI Sjakk</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Chess piece decorations for roles */
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 18px;
+      margin-top: 8px;
+    }
+
+    .board-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.06);
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+    .board-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.16);
+    }
+    /* Alternating accent colors */
+    .board-card:nth-child(1) .bc-accent { background: var(--red); }
+    .board-card:nth-child(2) .bc-accent { background: #2a62b8; }
+    .board-card:nth-child(3) .bc-accent { background: #1e8a72; }
+    .board-card:nth-child(4) .bc-accent { background: #8a6c1e; }
+    .board-card:nth-child(5) .bc-accent { background: var(--red); }
+    .board-card:nth-child(6) .bc-accent { background: #2a62b8; }
+    .board-card:nth-child(7) .bc-accent { background: #1e8a72; }
+    .board-card:nth-child(8) .bc-accent { background: #8a6c1e; }
+    .board-card:nth-child(9) .bc-accent { background: var(--red); }
+    .board-card:nth-child(10) .bc-accent { background: #2a62b8; }
+
+    .bc-accent {
+      height: 6px;
+      width: 100%;
+    }
+    .bc-body {
+      padding: 22px 22px 20px;
+    }
+    .bc-piece {
+      font-size: 32px;
+      line-height: 1;
+      margin-bottom: 12px;
+      opacity: 0.18;
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      pointer-events: none;
+    }
+    .bc-role {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .bc-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 10px;
+      line-height: 1.25;
+    }
+    .bc-email {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--red);
+      font-weight: 600;
+      text-decoration: none;
+      word-break: break-all;
+    }
+    .bc-email:hover { text-decoration: underline; }
+
+    /* Pieces array for decoration */
+    .pieces { display: none; }
+
+    /* Intro banner */
+    .intro-banner {
+      background: var(--dark);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-bottom: 36px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .intro-banner-icon { font-size: 48px; line-height: 1; }
+    .intro-banner-text { flex: 1; min-width: 200px; }
+    .intro-banner-text h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: var(--cream);
+      margin-bottom: 6px;
+    }
+    .intro-banner-text p {
+      font-size: 14px;
+      color: rgba(245,240,232,0.65);
+      line-height: 1.6;
+    }
+    .intro-banner-text a {
+      color: var(--red-light);
+      font-weight: 600;
+    }
+
+    @media (max-width: 600px) {
+      .board-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .bc-name { font-size: 15px; }
+    }
+    @media (max-width: 400px) {
+      .board-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="top-nav" id="top-nav"></nav>
+
+<div class="page-hero">
+  <h1 data-i18n="board_hero_title">Styret</h1>
+  <p data-i18n="board_hero_sub">Hvem driver NTNUI Sjakk?</p>
+</div>
+
+<main class="site-main">
+
+  <div class="intro-banner">
+    <span class="intro-banner-icon">♛</span>
+    <div class="intro-banner-text">
+      <h3>NTNUI Sjakk</h3>
+      <p>Spørsmål? Ta kontakt med oss på <a href="mailto:sjakk-leder@ntnui.no">sjakk-leder@ntnui.no</a></p>
+    </div>
+  </div>
+
+  <div class="board-grid" id="board-grid">
+    <!-- Rendered by JS -->
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <p data-i18n="footer"></p>
+</footer>
+
+<script src="i18n.js"></script>
+<script>
+/* Chess pieces cycling for decoration */
+const PIECES = ['♔','♕','♖','♗','♘','♙','♚','♛','♜','♝'];
+
+buildNav('board');
+
+function renderBoard() {
+  const lang = getLang();
+  const roles = TRANSLATIONS[lang].board_roles;
+  const grid = document.getElementById('board-grid');
+
+  grid.innerHTML = roles.map((member, i) => `
+    <div class="board-card">
+      <div class="bc-accent"></div>
+      <div class="bc-body">
+        <span class="bc-piece">${PIECES[i % PIECES.length]}</span>
+        <div class="bc-role">${member.role}</div>
+        <div class="bc-name">${member.name}</div>
+        ${member.email
+          ? `<a class="bc-email" href="mailto:${member.email}">✉ ${member.email}</a>`
+          : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+renderBoard();
+
+/* Re-render board on language switch */
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('lang-btn')) {
+    setTimeout(renderBoard, 10);
+  }
+});
+</script>
+</body>
+</html>
