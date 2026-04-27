@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NTNUI Sjakk</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    /* ── CAROUSEL ── */
+    .carousel-wrap {
+      position: relative;
+      width: 100%;
+      height: 520px;
+      background: #111;
+      overflow: hidden;
+    }
+    .carousel-track {
+      display: flex;
+      height: 100%;
+      will-change: transform;
+      transition: transform 0.6s cubic-bezier(0.77,0,0.175,1);
+    }
+    .carousel-slide {
+      flex: 0 0 calc(100% / 3);
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    .carousel-slide img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+    }
+    .carousel-slide::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(100,20,20,0.5) 100%);
+      pointer-events: none;
+    }
+    .carousel-slide + .carousel-slide { border-left: 2px solid rgba(0,0,0,0.2); }
+
+    /* Hero text overlay on carousel */
+    .carousel-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      z-index: 10;
+      padding: 32px 48px;
+      background: linear-gradient(to top, rgba(20,8,8,0.82) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    .carousel-overlay h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(28px, 4.5vw, 52px);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.1;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.6);
+    }
+    .carousel-overlay p {
+      color: rgba(255,255,255,0.8);
+      font-size: 16px;
+      margin-top: 8px;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+      max-width: 560px;
+    }
+
+    .car-btn {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      z-index: 20; background: rgba(0,0,0,0.3); border: none;
+      color: rgba(255,255,255,0.85); cursor: pointer; font-size: 48px;
+      line-height: 1; padding: 6px 18px 10px; border-radius: 4px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+      transition: background 0.2s, transform 0.2s; backdrop-filter: blur(4px);
+    }
+    .car-btn:hover { background: rgba(155,52,52,0.7); transform: translateY(-50%) scale(1.07); }
+    .car-btn-prev { left: 10px; }
+    .car-btn-next { right: 10px; }
+
+    .car-dots {
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      z-index: 20; display: flex; gap: 8px;
+    }
+    .car-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(255,255,255,0.4); border: none; padding: 0;
+      cursor: pointer; transition: background 0.25s, transform 0.2s;
+    }
+    .car-dot.active { background: #fff; transform: scale(1.5); }
+
+    /* ── ICON NAVBAR ── */
+    .icon-nav {
+      display: flex; align-items: stretch;
+      background: var(--red);
+      box-shadow: 0 4px 20px rgba(100,20,20,0.4);
+    }
+    .icon-nav-item {
+      position: relative; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 5px;
+      padding: 15px 8px; flex: 1; text-decoration: none;
+      color: rgba(255,255,255,0.9); font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      border-right: 1px solid rgba(255,255,255,0.13); overflow: hidden;
+      transition: color 0.2s;
+    }
+    .icon-nav-item:last-child { border-right: none; }
+    .icon-nav-item::before { content:''; position:absolute; inset:0; background:rgba(0,0,0,0); transition:background 0.2s; }
+    .icon-nav-item:hover::before { background:rgba(0,0,0,0.22); }
+    .icon-nav-item:hover { color:#fff; }
+    .icon-nav-icon { font-size:22px; line-height:1; position:relative; z-index:1; transition:transform 0.2s; }
+    .icon-nav-item:hover .icon-nav-icon { transform: scale(1.18); }
+    .icon-nav-label { position:relative; z-index:1; }
+
+    /* ── SOCIAL BUTTONS ── */
+    .social-row {
+      display: flex; gap: 12px; flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    /* ── WELCOME SECTION ── */
+    .welcome-section {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 32px 36px;
+      box-shadow: var(--shadow);
+      margin-bottom: 8px;
+    }
+    .welcome-section h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px; font-weight: 900; color: var(--dark); margin-bottom: 12px;
+    }
+    .welcome-section p { color: var(--mid); line-height: 1.75; margin-bottom: 10px; }
+    .welcome-section a { color: var(--red); font-weight: 600; }
+
+    @media (max-width: 700px) {
+      .carousel-wrap { height: 240px; }
+      .carousel-slide { flex: 0 0 100%; }
+      .carousel-overlay { padding: 20px 20px; }
+      .icon-nav-label { display: none; }
+      .icon-nav-item { padding: 13px 4px; }
+    }
+    @media (min-width: 701px) and (max-width: 1000px) {
+      .carousel-wrap { height: 360px; }
+      .carousel-slide { flex: 0 0 50%; }
+    }
+
+    /* ── COUNTDOWN ── */
+    .countdown-banner {
+      background: var(--dark);
+      border-bottom: 3px solid var(--red);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .countdown-label {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(245,240,232,0.6);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .countdown-label i { color: var(--red-light); font-size: 15px; }
+    .countdown-units {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .countdown-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 52px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 6px;
+      padding: 6px 10px;
+    }
+    .countdown-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--cream);
+      line-height: 1;
+    }
+    .countdown-sub {
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(245,240,232,0.45);
+      margin-top: 3px;
+    }
+    .countdown-sep {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--red);
+      line-height: 1;
+      padding-bottom: 10px;
+    }
+    .countdown-happening {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--red-light);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
+
+    /* ── PUZZLE SECTION ── */
+    .puzzle-section {
+      background: var(--dark);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+      margin-top: 16px;
+    }
+    .puzzle-header {
+      background: var(--red);
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .puzzle-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .puzzle-header-left i {
+      font-size: 22px;
+      color: rgba(255,255,255,0.85);
+    }
+    .puzzle-header h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 900;
+      color: #fff;
+      margin: 0;
+    }
+    .puzzle-header p {
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+      margin: 2px 0 0;
+    }
+    .puzzle-body {
+      display: flex;
+      gap: 0;
+      min-height: 420px;
+    }
+    .puzzle-board-wrap {
+      flex: 0 0 auto;
+      padding: 28px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+    #puzzle-board {
+      width: min(360px, 90vw);
+      height: min(360px, 90vw);
+    }
+    .puzzle-side {
+      flex: 1;
+      padding: 28px 28px 28px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 0;
+    }
+    .puzzle-turn {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(245,240,232,0.55);
+    }
+    .puzzle-turn span {
+      color: var(--cream);
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      padding: 2px 10px;
+      margin-left: 8px;
+    }
+    .puzzle-feedback {
+      font-size: 16px;
+      font-weight: 700;
+      min-height: 26px;
+      border-radius: 6px;
+      padding: 6px 14px;
+      display: inline-block;
+      transition: all 0.3s;
+    }
+    .puzzle-feedback.correct { background: rgba(46,160,67,0.2); color: #4caf50; }
+    .puzzle-feedback.wrong   { background: rgba(220,53,69,0.2);  color: #f44; }
+    .puzzle-rating {
+      font-size: 13px;
+      color: rgba(245,240,232,0.4);
+    }
+    .puzzle-rating span { color: rgba(245,240,232,0.7); font-weight: 700; }
+    .puzzle-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: auto;
+    }
+    .puzzle-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 20px;
+      border-radius: 7px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      font-family: 'Source Sans 3', sans-serif;
+      transition: opacity 0.2s, transform 0.15s;
+      text-decoration: none;
+    }
+    .puzzle-btn:hover { opacity: 0.85; transform: scale(1.02); }
+    .puzzle-btn-next  { background: var(--red); color: #fff; }
+    .puzzle-btn-more  { background: rgba(255,255,255,0.08); color: var(--cream); border: 1px solid rgba(255,255,255,0.15); }
+    .puzzle-loading {
+      color: rgba(245,240,232,0.4);
+      font-size: 15px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    @media (max-width: 720px) {
+      .puzzle-body { flex-direction: column; }
+      .puzzle-board-wrap { padding: 20px 20px 0; }
+      .puzzle-side { padding: 16px 20px 24px; }
+      .countdown-units { gap: 4px; }
+      .countdown-unit { min-width: 44px; padding: 5px 8px; }
+      .countdown-num { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="top-nav" id="top-nav"></nav>
+
+<!-- CAROUSEL -->
+<div class="carousel-wrap" id="carousel">
+  <div class="carousel-track" id="car-track">
+    <!-- 3 end clones -->
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01504.jpg" alt=""></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01482.jpg" alt=""></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01495.jpg" alt=""></div>
+    <!-- 14 real slides -->
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01383.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01518.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01483.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01486.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/741e9c98548fabcec2a8d0cbac370ac1.jpeg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01415-kopi.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01500.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01384-kopi.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01364-kopi.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01354-kopi.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01504.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01482.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01495.jpg" alt="NTNUI Sjakk"></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01488.jpg" alt="NTNUI Sjakk"></div>
+    <!-- 3 start clones -->
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01383.jpg" alt=""></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01518.jpg" alt=""></div>
+    <div class="carousel-slide"><img src="https://ntnui.no/sjakk/wp-content/uploads/sites/270/2026/02/DCP01483.jpg" alt=""></div>
+  </div>
+
+  <!-- Hero overlay -->
+  <div class="carousel-overlay">
+    <h1 data-i18n="hero_welcome">Velkommen til NTNUI Sjakk!</h1>
+    <p data-i18n="hero_sub">Et åpent møtepunkt for alle sjakkinteresserte studenter i Trondheim.</p>
+  </div>
+
+  <button class="car-btn car-btn-prev" id="car-prev" aria-label="Forrige">&#8249;</button>
+  <button class="car-btn car-btn-next" id="car-next" aria-label="Neste">&#8250;</button>
+  <div class="car-dots" id="car-dots"></div>
+</div>
+
+<!-- COUNTDOWN -->
+<div class="countdown-banner" id="countdown-banner">
+  <span class="countdown-label">
+    <i class="fa-regular fa-calendar"></i>
+    <span data-i18n="countdown_label">Neste onsdagssjakk</span>
+  </span>
+  <div class="countdown-units" id="countdown-units">
+    <div class="countdown-unit"><span class="countdown-num" id="cd-days">--</span><span class="countdown-sub" data-i18n="cd_days">dager</span></div>
+    <span class="countdown-sep">:</span>
+    <div class="countdown-unit"><span class="countdown-num" id="cd-hours">--</span><span class="countdown-sub" data-i18n="cd_hours">timer</span></div>
+    <span class="countdown-sep">:</span>
+    <div class="countdown-unit"><span class="countdown-num" id="cd-mins">--</span><span class="countdown-sub" data-i18n="cd_mins">min</span></div>
+    <span class="countdown-sep">:</span>
+    <div class="countdown-unit"><span class="countdown-num" id="cd-secs">--</span><span class="countdown-sub" data-i18n="cd_secs">sek</span></div>
+  </div>
+</div>
+
+<!-- ICON NAVBAR -->
+<nav class="icon-nav">
+  <a href="#onsdagssjakk" class="icon-nav-item">
+    <i class="fa-solid fa-chess-knight icon-nav-icon"></i>
+    <span class="icon-nav-label" data-i18n="wed_title">Onsdagssjakk</span>
+  </a>
+  <a href="#fide" class="icon-nav-item">
+    <i class="fa-solid fa-trophy icon-nav-icon"></i>
+    <span class="icon-nav-label">FIDE</span>
+  </a>
+  <a href="#samarbeid" class="icon-nav-item">
+    <i class="fa-solid fa-handshake icon-nav-icon"></i>
+    <span class="icon-nav-label" data-i18n="section_collab">Samarbeid</span>
+  </a>
+  <a href="#kontakt" class="icon-nav-item">
+    <i class="fa-solid fa-envelope icon-nav-icon"></i>
+    <span class="icon-nav-label" data-i18n="section_contact">Kontakt</span>
+  </a>
+  <a href="faq.html" class="icon-nav-item">
+    <i class="fa-solid fa-circle-question icon-nav-icon"></i>
+    <span class="icon-nav-label" data-i18n="nav_faq">FAQ</span>
+  </a>
+  <a href="styre.html" class="icon-nav-item">
+    <i class="fa-solid fa-users icon-nav-icon"></i>
+    <span class="icon-nav-label" data-i18n="nav_board">Styret</span>
+  </a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="site-main">
+
+  <!-- Welcome -->
+  <div class="welcome-section">
+    <h2 data-i18n="hero_welcome">Velkommen til NTNUI Sjakk!</h2>
+    <p data-i18n="intro_text"></p>
+    <p>
+      <span data-i18n="intro_fb">Alle aktiviteter og oppdateringer publiseres jevnlig på vår</span>
+      <a href="https://fb.me/ntnuisjakk" target="_blank" rel="noopener noreferrer" data-i18n="intro_fb2">Facebook-side</a>.
+      <span data-i18n="intro_ig">Vi deler også bilder og videoer fra sjakkkveldene på</span>
+      <a href="https://instagram.com/ntnuisjakk" target="_blank" rel="noopener noreferrer" data-i18n="intro_ig2">Instagram</a>.
+    </p>
+    <div class="social-row">
+      <a href="https://www.facebook.com/ntnuisjakk" target="_blank" rel="noopener noreferrer" class="btn btn-fb"><i class="fa-brands fa-facebook-f"></i> Facebook</a>
+      <a href="https://www.instagram.com/ntnuisjakk/" target="_blank" rel="noopener noreferrer" class="btn btn-ig"><i class="fa-brands fa-instagram"></i> Instagram</a>
+    </div>
+  </div>
+
+  <!-- Activities -->
+  <h2 class="section-heading" data-i18n="section_activities">Aktiviteter</h2>
+
+  <div class="card-grid">
+    <div class="card" id="onsdagssjakk">
+      <div class="card-header red"><i class="fa-solid fa-chess-knight"></i> <span data-i18n="wed_title">Onsdagssjakk</span></div>
+      <div class="card-body" data-i18n="wed_body"></div>
+    </div>
+    <div class="card" id="fide">
+      <div class="card-header blue"><i class="fa-solid fa-trophy"></i> <span data-i18n="fide_title">FIDE-rangert sjakk</span></div>
+      <div class="card-body" data-i18n="fide_body"></div>
+    </div>
+  </div>
+
+  <!-- Collaboration -->
+  <h2 class="section-heading" id="samarbeid" data-i18n="section_collab">Samarbeid</h2>
+
+  <details class="accordion">
+    <summary><i class="fa-solid fa-chess-board"></i> <span data-i18n="rental_title">Utlån av sjakkutstyr</span></summary>
+    <div class="accordion-body" data-i18n="rental_body"></div>
+  </details>
+
+  <div class="card">
+    <div class="card-header red"><i class="fa-solid fa-handshake"></i> <span data-i18n="partner_title">Bli samarbeidspartner</span></div>
+    <div class="card-body" style="text-align:center" data-i18n="partner_body"></div>
+  </div>
+
+  <!-- Contact -->
+  <h2 class="section-heading" id="kontakt" data-i18n="section_contact">Kontakt</h2>
+  <div class="card">
+    <div class="card-header teal"><i class="fa-solid fa-envelope"></i> <span data-i18n="section_contact">Kontakt</span></div>
+    <div class="card-body" style="text-align:center;font-size:16px" data-i18n="contact_body"></div>
+  </div>
+
+  <!-- Puzzle -->
+  <h2 class="section-heading" data-i18n="puzzle_heading">Dagens sjakkpuzzle</h2>
+  <div class="puzzle-section">
+    <div class="puzzle-header">
+      <div class="puzzle-header-left">
+        <i class="fa-solid fa-chess"></i>
+        <div>
+          <h3 data-i18n="puzzle_heading">Dagens sjakkpuzzle</h3>
+          <p data-i18n="puzzle_sub">Finn det beste trekket</p>
+        </div>
+      </div>
+      <div class="puzzle-rating" id="puzzle-rating"></div>
+    </div>
+    <div class="puzzle-body">
+      <div class="puzzle-board-wrap">
+        <div id="puzzle-board"></div>
+      </div>
+      <div class="puzzle-side">
+        <div class="puzzle-turn" id="puzzle-turn"></div>
+        <div class="puzzle-feedback" id="puzzle-feedback"></div>
+        <div class="puzzle-actions">
+          <button class="puzzle-btn puzzle-btn-next" id="puzzle-next" onclick="loadNextPuzzle()">
+            <i class="fa-solid fa-forward"></i> <span data-i18n="puzzle_next">Neste puzzle</span>
+          </button>
+          <a href="https://lichess.org/training" target="_blank" rel="noopener noreferrer" class="puzzle-btn puzzle-btn-more">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> <span data-i18n="puzzle_more">Mer på Lichess</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <p data-i18n="footer">© 2025 NTNUI Sjakk · Norges Teknisk-Naturvitenskapelige Universitets Idrettslag</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+<script src="i18n.js"></script>
+<script>
+/* ── Nav ── */
+buildNav('home');
+
+/* ── Countdown to next Wednesday 18:15 ── */
+(function () {
+  function nextWednesday() {
+    var now = new Date();
+    var d = new Date(now);
+    var day = d.getDay(); // 0=Sun,3=Wed
+    var daysUntil = (3 - day + 7) % 7;
+    if (daysUntil === 0) {
+      var h = d.getHours(), m = d.getMinutes();
+      if (h > 18 || (h === 18 && m >= 15)) daysUntil = 7;
+    }
+    d.setDate(d.getDate() + daysUntil);
+    d.setHours(18, 15, 0, 0);
+    return d;
+  }
+
+  function tick() {
+    var now = new Date();
+    var target = nextWednesday();
+    var diff = target - now;
+
+    if (diff <= 0) {
+      document.getElementById('countdown-units').innerHTML =
+        '<span class="countdown-happening" data-i18n="countdown_now">' + t('countdown_now') + '</span>';
+      return;
+    }
+
+    var days  = Math.floor(diff / 86400000);
+    var hours = Math.floor((diff % 86400000) / 3600000);
+    var mins  = Math.floor((diff % 3600000)  / 60000);
+    var secs  = Math.floor((diff % 60000)    / 1000);
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+    document.getElementById('cd-days').textContent  = pad(days);
+    document.getElementById('cd-hours').textContent = pad(hours);
+    document.getElementById('cd-mins').textContent  = pad(mins);
+    document.getElementById('cd-secs').textContent  = pad(secs);
+  }
+
+  tick();
+  setInterval(tick, 1000);
+})();
+
+/* ── Chess Puzzle (Lichess API) ── */
+var board = null;
+var game  = null;
+var puzzleMoves = [];
+var moveIndex   = 0;
+var puzzleColor = 'w';
+
+function showFeedback(msg, type) {
+  var el = document.getElementById('puzzle-feedback');
+  el.textContent = msg;
+  el.className = 'puzzle-feedback ' + (type || '');
+}
+
+/*
+  Lichess /api/puzzle/daily response structure:
+  {
+    game: { id, pgn, clock, perf, rated, players },
+    puzzle: { id, rating, plays, solution: ["e2e4","e7e5",...], themes, initialPly }
+  }
+  - solution is array of UCI moves starting from the puzzle position
+  - initialPly tells us how many half-moves into the game the puzzle starts
+*/
+function initPuzzle(data) {
+  var puzzle     = data.puzzle;
+  var gamePgn    = data.game.pgn;
+  var initialPly = puzzle.initialPly; // number of half-moves before puzzle starts
+
+  // Build position by replaying the game up to initialPly
+  var tempGame = new Chess();
+  tempGame.load_pgn(gamePgn);
+  var history = tempGame.history({ verbose: true });
+
+  game = new Chess();
+  for (var i = 0; i < initialPly; i++) {
+    if (history[i]) game.move(history[i]);
+  }
+
+  puzzleMoves = puzzle.solution; // array of UCI strings
+  moveIndex   = 0;
+  puzzleColor = game.turn();
+
+  if (board) board.destroy();
+  board = Chessboard('puzzle-board', {
+    position:    game.fen(),
+    orientation: puzzleColor === 'w' ? 'white' : 'black',
+    draggable:   true,
+    onDrop:      onDrop,
+    pieceTheme:  'https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/img/chesspieces/wikipedia/{piece}.png'
+  });
+
+  var turnText = puzzleColor === 'w' ? t('puzzle_white_moves') : t('puzzle_black_moves');
+  document.getElementById('puzzle-turn').innerHTML =
+    t('puzzle_turn_label') + '<span>' + turnText + '</span>';
+  document.getElementById('puzzle-rating').innerHTML =
+    t('puzzle_rating_label') + ' <span>' + puzzle.rating + '</span>';
+
+  showFeedback(t('puzzle_find_move'));
+}
+
+function loadNextPuzzle() {
+  showFeedback('');
+  document.getElementById('puzzle-turn').innerHTML = '<span style="color:rgba(245,240,232,0.4)">Laster puzzle...</span>';
+  document.getElementById('puzzle-rating').innerHTML = '';
+
+  fetch('https://lichess.org/api/puzzle/daily', {
+    headers: { 'Accept': 'application/json' }
+  })
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      initPuzzle(data);
+    })
+    .catch(function(err) {
+      console.error('Puzzle daily failed:', err);
+      // Fallback: try /api/puzzle/next (requires no auth, returns random puzzle)
+      fetch('https://lichess.org/api/puzzle/next', {
+        headers: { 'Accept': 'application/json' }
+      })
+        .then(function(r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
+        .then(function(data) {
+          initPuzzle(data);
+        })
+        .catch(function(err2) {
+          console.error('Puzzle next failed:', err2);
+          document.getElementById('puzzle-turn').innerHTML = '';
+          document.getElementById('puzzle-board').innerHTML =
+            '<p class="puzzle-loading">' + t('puzzle_error') + '</p>';
+        });
+    });
+}
+
+function onDrop(source, target) {
+  var expected = puzzleMoves[moveIndex];
+  var move = game.move({ from: source, to: target, promotion: 'q' });
+
+  if (move === null) return 'snapback';
+
+  var uci = source + target;
+  if (uci === expected || uci + 'q' === expected) {
+    moveIndex++;
+    board.position(game.fen());
+
+    if (moveIndex >= puzzleMoves.length) {
+      showFeedback(t('puzzle_correct'), 'correct');
+      return;
+    }
+
+    // Play the opponent's response
+    setTimeout(function() {
+      var oppUci = puzzleMoves[moveIndex];
+      var oppMove = game.move({
+        from: oppUci.slice(0, 2),
+        to:   oppUci.slice(2, 4),
+        promotion: oppUci[4] || 'q'
+      });
+      moveIndex++;
+      board.position(game.fen());
+
+      if (moveIndex >= puzzleMoves.length) {
+        showFeedback(t('puzzle_correct'), 'correct');
+      } else {
+        showFeedback(t('puzzle_find_move'));
+      }
+    }, 400);
+  } else {
+    game.undo();
+    showFeedback(t('puzzle_wrong'), 'wrong');
+    board.position(game.fen());
+    setTimeout(function() { showFeedback(t('puzzle_find_move')); }, 1200);
+    return 'snapback';
+  }
+}
+
+/* ── Carousel ── */
+window.addEventListener('load', function () {
+  loadNextPuzzle();
+
+  (function () {
+    var TOTAL = 14, CLONE = 3, current = 0, animating = false, autoTimer;
+    var carousel = document.getElementById('carousel');
+    var track    = document.getElementById('car-track');
+    var dotsWrap = document.getElementById('car-dots');
+
+    for (var i = 0; i < TOTAL; i++) {
+      var d = document.createElement('button');
+      d.className = 'car-dot' + (i === 0 ? ' active' : '');
+      d.setAttribute('aria-label', 'Bilde ' + (i+1));
+      dotsWrap.appendChild(d);
+    }
+    var dots = dotsWrap.querySelectorAll('.car-dot');
+    var slides;
+
+    function perView() {
+      var w = carousel.offsetWidth;
+      if (w < 701)  return 1;
+      if (w < 1001) return 2;
+      return 3;
+    }
+    function setSizes() {
+      slides = track.querySelectorAll('.carousel-slide');
+      var pv = perView(), w = carousel.offsetWidth / pv;
+      slides.forEach(function(s){ s.style.width = w + 'px'; });
+      goTo(current, false);
+    }
+    function goTo(idx, animate) {
+      if (animate === undefined) animate = true;
+      track.style.transition = animate ? 'transform 0.6s cubic-bezier(0.77,0,0.175,1)' : 'none';
+      var pv = perView(), slideW = carousel.offsetWidth / pv;
+      track.style.transform = 'translateX(-' + (idx + CLONE) * slideW + 'px)';
+      var ri = ((idx % TOTAL) + TOTAL) % TOTAL;
+      dots.forEach(function(d,i){ d.classList.toggle('active', i === ri); });
+      current = idx;
+    }
+    function next() { if (!animating) { animating = true; goTo(current + 1); } }
+    function prev() { if (!animating) { animating = true; goTo(current - 1); } }
+    track.addEventListener('transitionend', function() {
+      if (current >= TOTAL) goTo(0, false);
+      if (current < 0)      goTo(TOTAL - 1, false);
+      animating = false;
+    });
+    document.getElementById('car-next').addEventListener('click', function(){ next(); resetAuto(); });
+    document.getElementById('car-prev').addEventListener('click', function(){ prev(); resetAuto(); });
+    dots.forEach(function(d,i){ d.addEventListener('click', function(){ animating=true; goTo(i); resetAuto(); }); });
+    function startAuto() { autoTimer = setInterval(next, 3500); }
+    function resetAuto()  { clearInterval(autoTimer); startAuto(); }
+    carousel.addEventListener('mouseenter', function(){ clearInterval(autoTimer); });
+    carousel.addEventListener('mouseleave', startAuto);
+    setSizes();
+    window.addEventListener('resize', setSizes);
+    startAuto();
+  })();
+});
+</script>
+</body>
+</html>
