@@ -49,7 +49,7 @@ const TRANSLATIONS = {
     faq_q2: "Hvor mye koster det å spille med NTNUI Sjakk?",
     faq_a2: "Ingenting!",
     faq_q3: "Hvor god må man være for å spille med NTNUI Sjakk?",
-    faq_a3: "Du burde kjenne til reglene i sjakk, men det er ingen krav om ferdighetsnivå.",
+    faq_a3: "Det er ingen krav om ferdighetsnivå. Vi har til og med nybegynnerkurs hver onsdag hvor du kan lære alt du trenger",
     faq_q4: "Kan man få rating av å spille med NTNUI Sjakk?",
     faq_a4: `NTNUI Sjakk er medlem i NSF og det er mulig å få rating ved å delta i offisielle turneringer, som blant annet NTNUI arrangerer fra tid til annen. For å bli medlem i NSF-klubben, ta kontakt med <a href="mailto:sjakk-kasserer@ntnui.no">sjakk-kasserer@ntnui.no</a>.`,
 

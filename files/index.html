@@ -6,6 +6,7 @@
   <title>NTNUI Sjakk</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
   <style>
     /* ── CAROUSEL ── */
     .carousel-wrap {
@@ -522,9 +523,9 @@
   <p data-i18n="footer">© 2025 NTNUI Sjakk · Norges Teknisk-Naturvitenskapelige Universitets Idrettslag</p>
 </footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
 <script src="i18n.js"></script>
 <script>
 /* ── Nav ── */
@@ -592,27 +593,20 @@ function showFeedback(msg, type) {
     game: { id, pgn, clock, perf, rated, players },
     puzzle: { id, rating, plays, solution: ["e2e4","e7e5",...], themes, initialPly }
   }
-  - solution is array of UCI moves starting from the puzzle position
-  - initialPly tells us how many half-moves into the game the puzzle starts
+  - solution is array of UCI moves. The first move is always played automatically
+    (it's the opponent's last move that set up the puzzle). The player answers from move index 1.
+  - initialPly tells us how many half-moves into the game the puzzle starts.
 */
 function initPuzzle(data) {
-  var puzzle     = data.puzzle;
-  var gamePgn    = data.game.pgn;
-  var initialPly = puzzle.initialPly; // number of half-moves before puzzle starts
+  var puzzle = data.puzzle;
 
-  // Build position by replaying the game up to initialPly
-  var tempGame = new Chess();
-  tempGame.load_pgn(gamePgn);
-  var history = tempGame.history({ verbose: true });
-
-  game = new Chess();
-  for (var i = 0; i < initialPly; i++) {
-    if (history[i]) game.move(history[i]);
-  }
+  // Load the puzzle position directly from puzzle.fen — this is always correct
+  // and includes the right side to move (w/b in the FEN string)
+  game = new Chess(puzzle.fen);
 
   puzzleMoves = puzzle.solution; // array of UCI strings
   moveIndex   = 0;
-  puzzleColor = game.turn();
+  puzzleColor = game.turn(); // read directly from FEN — guaranteed correct
 
   if (board) board.destroy();
   board = Chessboard('puzzle-board', {
@@ -620,7 +614,7 @@ function initPuzzle(data) {
     orientation: puzzleColor === 'w' ? 'white' : 'black',
     draggable:   true,
     onDrop:      onDrop,
-    pieceTheme:  'https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/img/chesspieces/wikipedia/{piece}.png'
+    pieceTheme: 'https://lichess1.org/assets/piece/cburnett/{piece}.svg'
   });
 
   var turnText = puzzleColor === 'w' ? t('puzzle_white_moves') : t('puzzle_black_moves');
@@ -649,34 +643,24 @@ function loadNextPuzzle() {
     })
     .catch(function(err) {
       console.error('Puzzle daily failed:', err);
-      // Fallback: try /api/puzzle/next (requires no auth, returns random puzzle)
-      fetch('https://lichess.org/api/puzzle/next', {
-        headers: { 'Accept': 'application/json' }
-      })
-        .then(function(r) {
-          if (!r.ok) throw new Error('HTTP ' + r.status);
-          return r.json();
-        })
-        .then(function(data) {
-          initPuzzle(data);
-        })
-        .catch(function(err2) {
-          console.error('Puzzle next failed:', err2);
-          document.getElementById('puzzle-turn').innerHTML = '';
-          document.getElementById('puzzle-board').innerHTML =
-            '<p class="puzzle-loading">' + t('puzzle_error') + '</p>';
-        });
+      document.getElementById('puzzle-turn').innerHTML = '';
+      document.getElementById('puzzle-board').innerHTML =
+        '<p class="puzzle-loading">' + t('puzzle_error') + '</p>';
     });
 }
 
 function onDrop(source, target) {
   var expected = puzzleMoves[moveIndex];
-  var move = game.move({ from: source, to: target, promotion: 'q' });
+  var promotionPiece = (expected && expected.length === 5) ? expected[4] : 'q';
+  var move = game.move({ from: source, to: target, promotion: promotionPiece });
 
   if (move === null) return 'snapback';
 
-  var uci = source + target;
-  if (uci === expected || uci + 'q' === expected) {
+  var uci = source + target + (move.promotion ? move.promotion : '');
+  var uciBase = source + target;
+
+  // Accept if base UCI matches, or full UCI with promotion matches
+  if (uciBase === expected || uci === expected) {
     moveIndex++;
     board.position(game.fen());
 
@@ -688,9 +672,9 @@ function onDrop(source, target) {
     // Play the opponent's response
     setTimeout(function() {
       var oppUci = puzzleMoves[moveIndex];
-      var oppMove = game.move({
-        from: oppUci.slice(0, 2),
-        to:   oppUci.slice(2, 4),
+      game.move({
+        from:      oppUci.slice(0, 2),
+        to:        oppUci.slice(2, 4),
         promotion: oppUci[4] || 'q'
       });
       moveIndex++;
