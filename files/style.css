@@ -297,7 +297,7 @@ img { display: block; max-width: 100%; }
 .btn:hover { opacity: 0.88; transform: scale(1.04); }
 .btn-fb   { background: #3373dc; color: #fff; }
 .btn-ig   { background: var(--red); color: #fff; }
-.btn-red  { background: var(--red); color: #fff; }
+.btn-red  { background: var(--red); color: #fff !important; }
 .btn-blue { background: #2a62b8; color: #fff; }
 
 /* ── FOOTER ── */
