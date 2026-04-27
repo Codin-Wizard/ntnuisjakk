@@ -124,6 +124,16 @@
     @media (max-width: 400px) {
       .board-grid { grid-template-columns: 1fr; }
     }
+
+    .chess-logo {
+      position: fixed; bottom: 24px; right: 28px; z-index: 999;
+      width: 72px; height: 72px; border-radius: 50%; overflow: hidden;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+      border: 2px solid rgba(255,255,255,0.12);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .chess-logo:hover { transform: scale(1.07); box-shadow: 0 6px 24px rgba(0,0,0,0.6); }
+    .chess-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
   </style>
 </head>
 <body>
@@ -150,6 +160,10 @@
   </div>
 
 </main>
+
+<div class="chess-logo">
+  <img src="./Images/logo.jpg" alt="NTNUI Sjakk logo">
+</div>
 
 <footer class="site-footer">
   <p data-i18n="footer"></p>
